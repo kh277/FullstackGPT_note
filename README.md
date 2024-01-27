@@ -15,7 +15,7 @@
    
     + output type : ChatMessage (LLM 등 Chat AI model의 output)
 
-5. OutputParser
+5. Output Parser
    
     + input type  : ChatMessage
 
