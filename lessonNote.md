@@ -1,5 +1,51 @@
 # Chat GPT API - Langchain 정리
 
+## 3.4강 전체 코드
+
+``` python
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain.callbacks import StreamingStdOutCallbackHandler
+
+# Chat model 설정
+chat = ChatOpenAI(
+    temperature=0.1,
+    streaming=True,
+    callbacks = [StreamingStdOutCallbackHandler()]
+)
+
+# chef_chain, veg_chain에 대한 prompt 작성
+chef_prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a world-class international chef. You create easy to follow \
+      recipies for any type of cuosone with easy to find ingredients."),
+    ("human", "I want to cook {cuisine} food.")
+])
+
+# langchain 생성
+chef_chain = chef_prompt | chat
+```
+
+``` python
+veg_prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a vegetarian chef specialized on making traditional recipies \
+      vegetarian. You find alternative ingredients and explain their \
+      preparation. You don't radically modify the recipe. If there is no \
+      alternative for a food just say you don't know how to replace it."),
+    ("human", "{question}")
+])
+
+veg_chain = veg_prompt | chat
+
+# chef_chain의 결과물이 veg_chain의 recipe에 들어가야 하므로, 아래와 같이 작성함
+# invoke를 2번 작성해도 되지만, 아래 코드가 더 보기 쉬움
+final_chain = {"question" : chef_chain} | veg_chain
+
+final_chain.invoke({
+    "cuisine": "indian"
+})
+
+```
+
 ## 3.4강 Langchain input, output
 #### Prompt -> Retriever -> Chat Model -> Tool -> Output Parser 순서로 진행.
 
