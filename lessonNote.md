@@ -27,10 +27,9 @@ chef_chain = chef_prompt | chat
 
 ``` python
 veg_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a vegetarian chef specialized on making traditional recipies \
-      vegetarian. You find alternative ingredients and explain their \
-      preparation. You don't radically modify the recipe. If there is no \
-      alternative for a food just say you don't know how to replace it."),
+    ("system", "You are a vegetarian chef specialized on making traditional recipies vegetarian. \
+      You find alternative ingredients and explain their preparation. You don't radically modify \
+      the recipe. If there is no alternative for a food just say you don't know how to replace it."),
     ("human", "{question}")
 ])
 
