@@ -79,7 +79,7 @@ chain.invoke({
 })
 
 ```
-
+위 코드는 예제를 제시하여 그 예시와 같은 형식의 응답이 나오도록 FewShotPromptTemplate를 사용하여 작성한 코드이다.
 
 
 ## 4.1강 FewShotPromptTemplate 사용 예제
