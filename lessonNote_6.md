@@ -89,7 +89,7 @@ loader = UnstructuredFileLoader("./chapter_one.txt")
 
 loader.load_and_split(text_splitter=splitter)
 ```
-CharacterTextSplitter는 옵션에 separator를 추가할 수 있는데, 이는 python의 split()과 같은 역할을 한다.  
+#### CharacterTextSplitter는 옵션에 separator를 추가할 수 있는데, 이는 python의 split()과 같은 역할을 한다.  
 
 
 
@@ -113,7 +113,7 @@ loader = UnstructuredFileLoader("./chapter_one.txt")
 loader.load_and_split(text_splitter=splitter)
 ```
 CharacterTextSplitter의 옵션 중에 length_function이라는 기능이 있다.   
-default는 python의 내장 함수인 len()를 사용한다.  
+default값은 python의 내장 함수인 len()를 사용하도록 되어 있다.  
 그러나 우리는 Chat GPT API를 사용하기 때문에 글자 개수가 아닌, token의 개수에 맞게 적용해야 한다.  
 이것이 Tiktoken 패키지이다.
 
@@ -172,4 +172,9 @@ Embed, Store 과정은 아래와 같다.
       이 함수는 Load, Transform 작업에서 생성한 Document, 3에서 생성한 임베딩을 인자로 받는다.
      
 Retrieve 과정은 similarity_search()를 이용하여 캐시 저장소에 저장된 Vector값과 유사한 값을 찾는다.    
-챗봇을 통해 질문한 경우, Retrieve 작업을 통해 질문과 유사한 데이터 청크를 추출하고 prompt와 함께 LLM 모델로 넘겨주어 처리하도록 한다.   
+#### 챗봇을 통해 질문한 경우, Retrieve 작업을 통해 질문과 유사한 데이터 청크를 추출하고 prompt와 함께 LLM 모델로 넘겨주어 처리하도록 한다.  
+
+
+
+
+## 6.5 Langsmith
