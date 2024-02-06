@@ -120,4 +120,54 @@ default는 python의 내장 함수인 len()를 사용한다.
 
 
 
-## 6.3강 - Embed 과정 (Vector)
+## 6.4강 - Embed, Store, Retrieve 과정 (Vector)
+### Embedding
+``` python
+from langchain.chat_models import ChatOpenAI
+from langchain.document_loaders import UnstructuredFileLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.storage import LocalFileStore
+
+
+# Load 과정
+loader = UnstructuredFileLoader("./test.txt")
+
+
+# Transform 과정
+splitter = CharacterTextSplitter.from_tiktoken_encoder(
+    separator="\n",
+    chunk_size=600,
+    chunk_overlap=100,
+)
+docs = loader.load_and_split(text_splitter=splitter)
+
+
+# 3. Embed, 4. Store 과정
+# embedding 작업을 위한 embedder 선언
+embeddings = OpenAIEmbeddings()
+
+# embedding 작업 결과물을 저장할 캐시 저장소 설정
+cache_dir = LocalFileStore("./.cache/")
+
+# 캐시 저장소를 사용하는 embedding 생성
+cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+
+# 주어진 문서에 대한 Vector 생성
+vectorstore = Chroma.from_documents(docs, cached_embeddings)
+
+# 5. Retrieve 과정
+# vectorstore에서 예시 질의와 유사한 문서 Retrieve
+results = vectorstore.similarity_search("where does winston live")
+print(results)
+```
+위 코드에서 1, 2번 과정은 6.2강에서 작성했던 코드와 동일하다.  
+3, 4번 작업은 아래와 같다.  
+  3-1. 임베딩 작업을 위해 OpenAIEmbeddings()라는 embedder를 선언한다.
+  3-2. 임베딩 작업을 한 뒤 결과를 저장할 캐시 저장소를 선언한다.
+  3-3. CacheBackedEmbeddings.from_bytes_store()를 사용하여 임베딩을 생성한다. 이 함수는 embedder와 캐시 저장소를 인자로 받는다.
+  3-4. Chroma.from_documents()를 이용하여 주어진 문서에 대한 Vector값을 생성한다.
+     이 함수는 1, 2번 작업에서 load한 문서, 3-3에서 생성한 임베딩을 인자로 받는다.
+5번 작업은 vectorstore.similarity_search()를 이용하여 캐시 저장소에 저장된 Vector값과 유사한 값을 찾는다.  
+챗봇을 통해 질문한 경우, 5번 작업을 통해 질문과 유사한 데이터 청크를 추출하고 prompt와 함께 LLM 모델로 넘겨주어 처리하도록 한다.
