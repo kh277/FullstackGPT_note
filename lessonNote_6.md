@@ -164,11 +164,11 @@ print(results)
 ```
 위 코드에서 Load, Transform 과정은 6.2강에서 작성했던 코드와 동일하다.  
 Embed, Store 과정은 아래와 같다.  
-  1. 임베딩 작업을 위해 embedder를 OpenAIEmbeddings()를 이용하여 선언한다.
-  2. 임베딩 작업의 결과를 저장할 캐시 저장소를 LocalFileStore()를 이용하여 선언한다.
-  3. CacheBackedEmbeddings.from_bytes_store()를 이용하여 임베딩을 생성한다.
-      이 함수는 embedder와 캐시 저장소를 인자로 받는다.
-  4. Chroma.from_documents()를 이용하여 주어진 문서에 대한 Vector값을 생성한다.
-      이 함수는 Load, Transform 작업에서 생성한 Document, 3에서 생성한 임베딩을 인자로 받는다.
-Retrieve 작업은 vectorstore.similarity_search()를 이용하여 캐시 저장소에 저장된 Vector값과 유사한 값을 찾는다.   
-챗봇을 통해 질문한 경우, Retrieve 작업을 통해 질문과 유사한 데이터 청크를 추출하고 prompt와 함께 LLM 모델로 넘겨주어 처리하도록 한다.  
+  1. 임베딩 작업을 위해 embedder를 OpenAIEmbeddings()를 이용하여 선언한다.  
+  2. 임베딩 작업의 결과를 저장할 캐시 저장소를 LocalFileStore()를 이용하여 선언한다.  
+  3. CacheBackedEmbeddings.from_bytes_store()를 이용하여 임베딩을 생성한다.  
+      이 함수는 embedder와 캐시 저장소를 인자로 받는다.  
+  4. Chroma.from_documents()를 이용하여 주어진 문서에 대한 Vector값을 생성한다.  
+      이 함수는 Load, Transform 작업에서 생성한 Document, 3에서 생성한 임베딩을 인자로 받는다.  
+Retrieve 작업은 vectorstore.similarity_search()를 이용하여 캐시 저장소에 저장된 Vector값과 유사한 값을 찾는다.    
+챗봇을 통해 질문한 경우, Retrieve 작업을 통해 질문과 유사한 데이터 청크를 추출하고 prompt와 함께 LLM 모델로 넘겨주어 처리하도록 한다.   
