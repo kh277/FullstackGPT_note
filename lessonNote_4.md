@@ -1,8 +1,7 @@
-# Chat GPT API - Langchain 정리
+# Chat GPT API - Model IO
 
-
-
-## 4.1강 전체 코드
+## 4.1강 - FewShotPromptTemplate / 전체 코드
+### FewShotPromptTemplate
 
 ``` python
 from langchain.chat_models import ChatOpenAI
@@ -79,22 +78,19 @@ chain.invoke({
 })
 
 ```
-위 코드는 예제를 제시하여 그 예시와 같은 형식의 응답이 나오도록 FewShotPromptTemplate를 사용하여 작성한 코드이다.
+#### FewShotPromptTemplate은 예제를 제시하고 해당 예시에 맞게 출력을 형식화해준다. 
 
-
-## 4.1강 FewShotPromptTemplate 사용 예제
-#### 예제를 제시하고 해당 예시에 맞게 출력 형식화하기 
-
-1. 예제 작성하기   
-2. Prompt를 사용해서 예제 형식화하기   
-3. FewShotPromptTemplate에게 전달하기
+1. 예제 작성하기  
+2. Prompt를 사용해서 예제 형식화하기  
+3. FewShotPromptTemplate에게 전달하기  
    + example_prompt는 예제를 형식화 함
    + examples는 각각의 예제를 가져옴
    + suffix는 내용 마지막에 질문을 넣어줌
 
 
 
-## 4.2강 전체 코드
+## 4.2강 - FewShotChatMessagePromptTemplate / 전체 코드
+### FewShotChatMessagePromptTemplate
 ``` python
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts.few_shot import FewShotChatMessagePromptTemplate
@@ -162,13 +158,13 @@ final_prompt = ChatPromptTemplate.from_messages([
 chain = final_prompt | chat
 chain.invoke({"country": "Germany"})
 ```
-
-위의 코드는 4.1과 같은데 FewShotPromptTemplate 대신 FewShotChatMessagePromptTemplate를 사용한 것이다.  
-이를 통해 chatbot에서 사용하는 형태의 응답을 만들 수 있다.  
-
+FewShotChatMessagePromptTemplate은 FewShotPromptTemplate와 비슷하다.  
+다만, chatbot에서 사용하는 형태의 응답을 만들 수 있다.  
 
 
-## 4.3강 전체 코드
+
+## 4.3강 - LengthBasedExampleSelector / 전체 코드
+### LengthBasedExampleSelector
 ```
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import example_selector
@@ -250,6 +246,4 @@ prompt = FewShotPromptTemplate(
 prompt.format(country="Brazil")
 
 ```
-
-위 코드는 LengthBasedExampleSelector를 사용한 예제이다.  
-예시에 너무 많은 글자가 들어갈 경우 이를 제한할 수 있다.
+LengthBasedExampleSelector는 사용자 입력에서 너무 많은 글자가 들어갈 경우 이를 제한하는 기능을 한다.  
