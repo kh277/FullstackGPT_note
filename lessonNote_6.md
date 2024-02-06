@@ -1,5 +1,8 @@
 # Chat GPT API - RAG
 
+
+
+
 ## 6.0강 - Introduction
 #### 전체적인 흐름 : <사용자의 질문> + <Vector에 저장된 질문과 관련된 문서들> 이 prompt에 추가되어 model로 입력됨.  
 RAG의 첫 번째 단계 - Retrival(Langchain 모듈)  
@@ -9,7 +12,10 @@ RAG의 첫 번째 단계 - Retrival(Langchain 모듈)
   4. Store : Embedding한 데이터를 저장
   5. Retrieve
 
-## 6.1강 - Data Loader과 Splitter
+
+
+
+## 6.1강 - Load 과정 (Data Loader)
 
 ### TextLoader
 ``` python
@@ -45,6 +51,9 @@ UnstructuredFileLoader는 텍스트 파일, 파워포인트, HTML, PDF, 이미�
 loader.load()를 할 경우 불러온 전체 문서가 Document로 묶여 list에 저장되는데, 이걸 분리할 필요가 있다.  
 
 
+
+
+## 6.1강 - Transform 과정 (Splitter)
 ### RecursiveCharacterTextSplitter
 ``` python
 from langchain.chat_models import ChatOpenAI
@@ -63,7 +72,6 @@ loader.load_and_split(text_splitter=splitter)
 RecursiveCharacterTextSplitter에서 chunk_size 옵션을 사용하면 청크 사이즈를 조절하면서 자를 수 있다.  
 chunk_size 옵션만 넣으면 문장이 중간에서 잘릴 수 있기 때문에 chunk_overlap 옵션을 추가해 준다.  
 위 두 옵션을 적용할 경우, 문장이 잘리면 앞쪽 Document에서 문장의 일부를 가져와 현재 Document에 추가하여 매끄럽게 해준다.  
-
 
 ### CharacterTextSplitter
 ``` python
@@ -86,99 +94,30 @@ CharacterTextSplitter는 옵션에 separator를 추가할 수 있는데, 이는 
 
 
 
-
-
-
-
-
-
-
-
-
-## 4.1강 FewShotPromptTemplate 사용 예제
-#### 예제를 제시하고 해당 예시에 맞게 출력 형식화하기 
-
-1. 예제 작성하기   
-2. Prompt를 사용해서 예제 형식화하기   
-3. FewShotPromptTemplate에게 전달하기
-   + example_prompt는 예제를 형식화 함
-   + examples는 각각의 예제를 가져옴
-   + suffix는 내용 마지막에 질문을 넣어줌
-
-
-
-## 4.2강 전체 코드
-``` python
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts.few_shot import FewShotChatMessagePromptTemplate
-from langchain.callbacks import StreamingStdOutCallbackHandler
-from langchain.prompts import ChatMessagePromptTemplate, ChatPromptTemplate
-
-# Chat model
-chat = ChatOpenAI(
-    temperature=0.1,
-    streaming=True,
-    callbacks=[StreamingStdOutCallbackHandler()]
-)
-
-examples = [
-    {
-        "country": "France",
-        "answer": """
-        I know this:
-        Capital: Paris
-        Language: French
-        Food: Wine and Cheese
-        Currency: Euro
-        """
-    },
-    {
-        "country": "Italy",
-        "answer": """
-        I know this:
-        Capital: Rome
-        Language: Italian
-        Food: Pizza and Pasta
-        Currency: Euro
-        """
-    },
-    {
-        "country": "Greece",
-        "answer": """
-        I know this:
-        Capital: Athens
-        Language: Greek
-        Food: Souvlaki and Feta Cheese
-        Currency: Euro
-        """
-    }
-]
-
-
-example_prompt = ChatPromptTemplate.from_messages([
-        ("human", "What do you know about {country}?"),
-        ("ai", "{answer}")
-])
-
-# 응답 형식화
-example_prompt = FewShotChatMessagePromptTemplate(
-    example_prompt=example_prompt,
-    examples=examples
-)
-
-final_prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a geography expert."),
-        example_prompt,
-        ("human", "What do you know about {country}?")
-])
-
-chain = final_prompt | chat
-chain.invoke({"country": "Germany"})
+## 6.2강 - Transform 과정 (Tiktoken)
+### from_tiktoken_encoder
 ```
+from langchain.chat_models import ChatOpenAI
+from langchain.document_loaders import UnstructuredFileLoader
+from langchain.text_splitter import CharacterTextSplitter
 
-위의 코드는 4.1과 같은데 FewShotPromptTemplate 대신 FewShotChatMessagePromptTemplate를 사용한 것이다.  
-이를 통해 chatbot에서 사용하는 형태의 응답을 만들 수 있다.  
+splitter = CharacterTextSplitter.from_tiktoken_encoder(
+    separator="\n",
+    chunk_size=600,
+    chunk_overlap=100,
+    # length_function=len
+)
+
+loader = UnstructuredFileLoader("./chapter_one.txt")
+
+loader.load_and_split(text_splitter=splitter)
+```
+CharacterTextSplitter의 옵션 중에 length_function이라는 기능이 있다.   
+default는 python의 내장 함수인 len()를 사용한다.  
+그러나 우리는 Chat GPT API를 사용하기 때문에 글자 개수가 아닌, token의 개수에 맞게 적용해야 한다.  
+이것이 Tiktoken 패키지이다.
 
 
 
 
+## 6.3강 - Embed 과정 (Vector)
