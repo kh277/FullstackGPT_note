@@ -162,6 +162,7 @@ vectorstore = Chroma.from_documents(docs, cached_embeddings)
 results = vectorstore.similarity_search("where does winston live")
 print(results)
 ```
+
 위 코드에서 Load, Transform 과정은 6.2강에서 작성했던 코드와 동일하다.  
 Embed, Store 과정은 아래와 같다.  
   1. 임베딩 작업을 위해 embedder를 OpenAIEmbeddings()를 이용하여 선언한다.  
@@ -171,14 +172,16 @@ Embed, Store 과정은 아래와 같다.
   4. Chroma.from_documents()를 이용하여 주어진 문서에 대한 Vector값을 생성한다.  
       이 함수는 Load, Transform 작업에서 생성한 Document, 3에서 생성한 임베딩을 인자로 받는다.
      
-Retrieve 과정은 similarity_search()를 이용하여 캐시 저장소에 저장된 Vector값과 유사한 값을 찾는다.    
+Retrieve 과정은 similarity_search()를 이용하여 캐시 저장소에 저장된 Vector값과 유사한 값을 찾는다.   
+
+#### 즉, 위 코드는 text.txt 파일을 읽어들여 청크별로 나눈 뒤 Document로 묶고 Vector화하여 ./cache에 저장하는 코드이다.
 #### 챗봇을 통해 질문한 경우, Retrieve 작업을 통해 질문과 유사한 데이터 청크를 추출하고 prompt와 함께 LLM 모델로 넘겨주어 처리하도록 한다.  
 
 
 
 
 ## 6.6 RetrievalQA
-#### Stuff Chain Method
+### Stuff Chain Method
 ``` python
 from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import UnstructuredFileLoader
@@ -191,24 +194,22 @@ from langchain.chains import RetrievalQA
 # LLM 선언
 llm = ChatOpenAI()
 
+# ===== 아래의 내용은 6.4강과 일치 =====
 loader = UnstructuredFileLoader("./test.txt")
-
 splitter = CharacterTextSplitter.from_tiktoken_encoder(
     separator="\n",
     chunk_size=600,
     chunk_overlap=100,
 )
 docs = loader.load_and_split(text_splitter=splitter)
-
 cache_dir = LocalFileStore("./.cache/")
-
 embeddings = OpenAIEmbeddings()
-
 cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
-
 vectorstore = Chroma.from_documents(docs, cached_embeddings)
+# ===== ===== ===== =====
 
-# Stuff Chain 생성
+
+# Stuff Chain 생성자 함수
 chain = RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",
@@ -218,16 +219,32 @@ chain = RetrievalQA.from_chain_type(
 # 응답 받아오기
 chain.run("Where does Harry live? And Describe there.")
 ```
-위 코드는 Stuff Document Chain을 사용한 코드이다.  
-Stuff Chain은 질문을 모델에 요청할 때, 인자로 넘겨받은 Document 전체를 질문과 함께 prompt에 입력한다.  
-따라서 prompt가 길어질 가능성이 있다.  
+#### 위 코드는 Vector 저장소에 저장된 값을 기반으로 Stuff chain을 만들어 응답을 받아오는 코드이다.
+Stuff Chain의 생성자 함수는 LLM모델, chain 타입, 데이터를 가져올 retriever를 인자로 받는다.  
+이 체인의 진행은 다음과 같다.
+  1. 사용자가 질문을 하면
+  2. 질문과 관련된 모든 Document를 저장소에서 추출한다.
+  3. 추출한 자료는 그대로 질문과 함께 prompt에 첨부되어 모델로 전달된다.  
+
+따라서 질문과 관련된 prompt만 추출했다고 해도, prompt가 길어질 가능성이 있다.  
+
 ![image](https://github.com/kh277/test/assets/113894741/dadbc975-9831-40f0-a25e-69d85dd16857)
 
 
+### Refine Chain Method
+Refine Document Chain은 구현하지 않는다.
+이 체인의 진행은 다음과 같다.
+  1. 사용자가 질문을 하면
+  2. 질문과 관련된 모든 Document를 저장소에서 추출한다.
+  3. 추출한 Document들을 하나씩 읽으면서 질문에 대한 답변 생성을 시도한다.
+  4. 위 작업을 추출한 모든 Document에 대해 진행한다.
+  5. 각각의 답변들을 모두 모아 최종 답변을 생성한다.  
 
-
-
-위 코드는 Refine Document Chain을 사용한 코드이다.
-Refine Chain은 질문을 요청할 때, 각각의 Document를 읽으면서 질문에 대한 답변 생성을 시도한다.  
+위 과정은 각각의 답변에 대해 응답을 요청해야 하므로 비용이 비싸질 수 있다. 
 ![image](https://github.com/kh277/test/assets/113894741/470c9a34-80bf-4a6a-857b-be63d58d37ae)
 
+
+그 외에도 Map-Reduce Method, Map re-rank Method가 있다.
+
+
+10:05부터
