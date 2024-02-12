@@ -219,6 +219,7 @@ chain = RetrievalQA.from_chain_type(
 # 응답 받아오기
 chain.run("Where does Harry live? And Describe there.")
 ```
+![image](https://github.com/kh277/test/assets/113894741/dadbc975-9831-40f0-a25e-69d85dd16857)
 #### 위 코드는 Vector 저장소에 저장된 값을 기반으로 Stuff chain을 만들어 응답을 받아오는 코드이다.
 Stuff Chain의 생성자 함수는 LLM모델, chain 타입, 데이터를 가져올 retriever를 인자로 받는다.  
 이 체인의 진행은 다음과 같다.
@@ -228,10 +229,11 @@ Stuff Chain의 생성자 함수는 LLM모델, chain 타입, 데이터를 가져�
 
 따라서 질문과 관련된 prompt만 추출했다고 해도, prompt가 길어질 가능성이 있다.  
 
-![image](https://github.com/kh277/test/assets/113894741/dadbc975-9831-40f0-a25e-69d85dd16857)
+
 
 
 ### Refine Chain Method
+![image](https://github.com/kh277/test/assets/113894741/470c9a34-80bf-4a6a-857b-be63d58d37ae)  
 Refine Document Chain은 구현하지 않는다.
 이 체인의 진행은 다음과 같다.
   1. 사용자가 질문을 하면
@@ -241,7 +243,7 @@ Refine Document Chain은 구현하지 않는다.
   5. 각각의 답변들을 모두 모아 최종 답변을 생성한다.  
 
 위 과정은 각각의 답변에 대해 응답을 요청해야 하므로 비용이 비싸질 수 있다. 
-![image](https://github.com/kh277/test/assets/113894741/470c9a34-80bf-4a6a-857b-be63d58d37ae)
+
 
 
 그 외에도 Map-Reduce Method, Map re-rank Method가 있다.
