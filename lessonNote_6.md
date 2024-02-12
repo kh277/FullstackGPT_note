@@ -177,4 +177,57 @@ Retrieve 과정은 similarity_search()를 이용하여 캐시 저장소에 저�
 
 
 
-## 6.5 Langsmith
+## 6.6 RetrievalQA
+#### Stuff Chain Method
+``` python
+from langchain.chat_models import ChatOpenAI
+from langchain.document_loaders import UnstructuredFileLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.storage import LocalFileStore
+from langchain.chains import RetrievalQA
+
+# LLM 선언
+llm = ChatOpenAI()
+
+loader = UnstructuredFileLoader("./test.txt")
+
+splitter = CharacterTextSplitter.from_tiktoken_encoder(
+    separator="\n",
+    chunk_size=600,
+    chunk_overlap=100,
+)
+docs = loader.load_and_split(text_splitter=splitter)
+
+cache_dir = LocalFileStore("./.cache/")
+
+embeddings = OpenAIEmbeddings()
+
+cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+
+vectorstore = Chroma.from_documents(docs, cached_embeddings)
+
+# Stuff Chain 생성
+chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    chain_type="stuff",
+    retriever=vectorstore.as_retriever()
+)
+
+# 응답 받아오기
+chain.run("Where does Harry live? And Describe there.")
+```
+위 코드는 Stuff Document Chain을 사용한 코드이다.  
+Stuff Chain은 질문을 모델에 요청할 때, 인자로 넘겨받은 Document 전체를 질문과 함께 prompt에 입력한다.  
+따라서 prompt가 길어질 가능성이 있다.  
+![image](https://github.com/kh277/test/assets/113894741/dadbc975-9831-40f0-a25e-69d85dd16857)
+
+
+
+
+
+위 코드는 Refine Document Chain을 사용한 코드이다.
+Refine Chain은 질문을 요청할 때, 각각의 Document를 읽으면서 질문에 대한 답변 생성을 시도한다.  
+![image](https://github.com/kh277/test/assets/113894741/470c9a34-80bf-4a6a-857b-be63d58d37ae)
+
