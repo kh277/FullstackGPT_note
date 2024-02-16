@@ -260,7 +260,7 @@ Refine Document Chain은 Stuff 코드에서 chain_type="stuff"를 chain_type="re
 ##
 위의 stuff, refine 방법 외에도 Map-Reduce Method, Map re-rank Method가 있다.  
 map-reduce 방법은 refine 작업을 시행하되, 분산 처리를 하여 동시에 진행하는 방법이다.  
-map re-rank 방법은 각각의 문서에서 질문에 대한 답변을 찾고, 답변에 대한 점수를 추가적으로 매겨 최고 점수를 받은 답변을 반환한다.  
+map re-rank 방법은 각각의 문서에서 질문에 대한 답변을 찾고, 점수를 추가적으로 매겨 최고 점수를 받은 답변을 반환한다.  
 적용 방법은 chain_type="stuff" 부분에 "map-reduce", "map_rerank"를 입력하면 된다.
 
 
