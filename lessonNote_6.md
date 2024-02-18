@@ -27,6 +27,8 @@ loader.load()
 ```
 TextLoader는 txt 파일에서 텍스트를 읽어올 수 있다. 
 
+## 
+
 ### PyPDFLoader
 ``` python
 from langchain.chat_models import ChatOpenAI
@@ -37,6 +39,7 @@ loader.load()
 ```
 PyPDFLoader는 pdf 파일에서 텍스트를 읽어올 수 있다.
 
+##
 
 ### UnstructuredFileLoader
 ``` python
@@ -72,6 +75,8 @@ loader.load_and_split(text_splitter=splitter)
 RecursiveCharacterTextSplitter에서 chunk_size 옵션을 사용하면 청크 사이즈를 조절하면서 자를 수 있다.  
 chunk_size 옵션만 넣으면 문장이 중간에서 잘릴 수 있기 때문에 chunk_overlap 옵션을 추가해 준다.  
 위 두 옵션을 적용할 경우, 문장이 잘리면 앞쪽 Document에서 문장의 일부를 가져와 현재 Document에 추가하여 매끄럽게 해준다.  
+
+##
 
 ### CharacterTextSplitter
 ``` python
