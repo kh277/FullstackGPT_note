@@ -102,7 +102,7 @@ st.write(name)
 
 
 
-# 7.3 - Multi Page
+## 7.3 - Multi Page
 ### st.sidebar()
 ``` python
 import streamlit as st
@@ -246,9 +246,47 @@ if message:
 #### 그러나 7.2강에서 설명한 Streamlit의 Data flow에 의해, 채팅을 새로 입력할 경우, 이전 메시지를 덮어 쓰는 문제가 발생한다.
 위 문제를 해결하기 위해 이전 메시지들을 저장하는 저장소가 필요하다.  
 단순하게 list를 선언해서 이전 메시지들을 누적시켜 저장한다고 생각할 수는 있지만, 문제는 코드가 항상 처음부터 끝까지 실행된다는 것이다.  
-따라서 이전 메시지들 또한 리셋이 되버린다.  
-streamlit의 Session_state는 refresh되지 않는다.  
+list, append를 사용하면 이전에 저장해둔 메시지들 또한 리셋이 되버린다.  
+Streamlit의 Session_state는 refresh되지 않는다.  
 이를 이용하면 chat 메시지를 저장할 수 있게 된다.
 
 ##
 
+``` python
+import streamlit as st
+import time
+
+st.set_page_config(
+    page_title="DocumentGPT",
+    page_icon="✅"
+)
+
+st.title("DocumentGPT")
+
+# 메시지 저장소 초기화
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+
+# 메시지 저장
+def send_message(message, role, save=True):
+    with st.chat_message(role):
+        st.write(message)
+    if save:
+        st.session_state["messages"].append({"message": message, "role": role})
+
+# 이전 메시지 출력
+for message in st.session_state["messages"]:
+    send_message(message["message"], message["role"], save=False)
+
+# 메시지 입출력
+message = st.chat_input("send a message to the AI")
+if message:
+    send_message(message, "human")
+    time.sleep(2)
+    send_message(f"You said : {message}", "ai")
+
+```
+![image](https://github.com/kh277/test/assets/113894741/1b29a9ba-6a2a-444c-bda7-1cf7e247e1d5)
+
+session_state를 추가한 코드이다.  
+위 사진과 같이 이전 기록이 저장되어 있는 것을 확인할 수 있다.  
