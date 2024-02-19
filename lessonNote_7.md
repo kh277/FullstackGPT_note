@@ -25,12 +25,11 @@ streamlit run Home.py
 즉, 내부에서 서버가 실행된다.  
 만약 이 서버를 종료하고 싶으면 Ctrl(Command) + C를 입력하면 된다.  
 
-
-
-
+<br>
+<br>
 
 ## 7.1강 - Magic
-#### streamlit.write()
+### streamlit.write()
 ``` python
 import streamlit as st
 from langchain.prompts import PromptTemplate
@@ -43,8 +42,10 @@ st.write(PromptTemplate)
 streamlit.write()는 입력한 내용을 사용자에게 보여주려고 한다.  
 write()는 문자열, 리스트, 딕셔너리, 문서 등을 출력할 수 있다.  
 
-##
+<br>
 
+##
+### streamlit.selectbox()
 ``` python
 import streamlit as st
 from langchain.prompts import PromptTemplate
@@ -57,12 +58,15 @@ st.selectbox("Choose your model", ("GPT-3", "GPT-4"))
 ![image](https://github.com/kh277/test/assets/113894741/ddef40fd-237f-4748-a4e1-eb60a164e7db)
 
 
+<br>
+
 ##
+
 그 외에도 다른 API apperance를 보고 싶으면, 아래 링크에서 찾아보면 된다.  
 https://docs.streamlit.io/library/api-reference
 
-
-
+<br>
+<br>
 
 ## 7.2 - Data Flow
 이 강의에서는 Streamlit의 Data flow와 데이터가 처리되는 방식을 정리한다.  
@@ -84,6 +88,8 @@ st.write(model)
 #### 즉, 무언가 단 하나라도 변경할 때마다 전체 파일이 재실행된다.  
 이 부분은 React js, flutter처럼 새롭게 갱신된 부분만 refresh되는 웹과는 달리, 전체 페이지가 refresh된다.
 
+<br>
+
 ##
 
 ``` python
@@ -99,8 +105,8 @@ st.write(name)
 위는 또다른 예시인데, 칸에 텍스트를 입력한 후 엔터키를 누를 때 refresh된다.  
 #### 단, Streamlit에는 Cache를 제공하는 매커니즘이 있어서 어떤 것들은 다시 실행되지 않는다.  
 
-
-
+<br>
+<br>
 
 ## 7.3 - Multi Page
 ### st.sidebar()
@@ -124,6 +130,8 @@ with st.sidebar:
 ![image](https://github.com/kh277/test/assets/113894741/9c6241e7-505d-41b3-ba40-e95941bca8d9)
 위의 두 코드는 전부 같은 기능을 하는 sidebar를 만드는 코드이다.  
 가독성을 위해 2번째 코드처럼 작성하는 편이 좋다.  
+
+<br>
 
 ##
 
@@ -150,6 +158,8 @@ with tab_three:
 ![image](https://github.com/kh277/test/assets/113894741/5ac9b071-4b3b-42db-b93f-5dff53df0b35)
 위의 코드와 같이 with 키워드는 st.sidebar가 아닌 다른 곳에서도 사용할 수 있다.
 
+<br>
+
 ##
 
 ``` python
@@ -165,8 +175,10 @@ st.title("FullstatGPT Home")
 ![image](https://github.com/kh277/test/assets/113894741/f94801b3-b0a8-415d-bdbd-696de465a199)  
 위와 같이 작성할 경우, 결과사진과 같이 브라우저 탭의 이름과 아이콘이 변경된다.  
 
-##
+<br>
 
+##
+### pages 폴더
 ![image](https://github.com/kh277/test/assets/113894741/cfb1d822-9a8e-4bcd-a8a2-fb57ffa6add1)  
 위 사진과 같이 pages라는 폴더를 만들어주고, 안쪽에 python 파일을 작성해 준다.
 
@@ -179,11 +191,11 @@ st.title("Document GPT")
 위 코드는 사진의 pages라는 폴더 내의 01_DocumentGPT.py의 코드이다.  
 결과화면과 같이 pages 폴더 내의 파일명은 sidebar에서 탭으로 표현된다.  
 
-
-
+<br>
+<br>
 
 ## 7.4 - Chat Messages
-### Streamlit이 가진 Chat Element
+### streamlit.chat_message()
 ``` python
 import streamlit as st
 import time
@@ -217,8 +229,10 @@ st.chat_input("send a message to the AI")
 st.chat_message()는 결과화면과 같이 AI-사람 간의 대화를 ChatGPT 형식처럼 출력해준다.  
 또한 st.status()를 사용하면, 로딩과정을 표현할 수 있다.  
 
-##
+<br>
 
+##
+### example_1
 ``` python
 import streamlit as st
 import time
@@ -250,8 +264,10 @@ list, append를 사용하면 이전에 저장해둔 메시지들 또한 리셋�
 Streamlit의 Session_state는 refresh되지 않는다.  
 이를 이용하면 chat 메시지를 저장할 수 있게 된다.
 
-##
+<br>
 
+##
+### example_2
 ``` python
 import streamlit as st
 import time
@@ -290,3 +306,23 @@ if message:
 
 session_state를 추가한 코드이다.  
 위 사진과 같이 이전 기록이 저장되어 있는 것을 확인할 수 있다.  
+
+<br>
+<br>
+
+## 7.5 Recap
+Streamlit에서 사용자가 데이터를 변경할 때 코드 전체를 재실행한다.  
+이 때, session_state를 제외하고 갱신하기 때문에 session_state는 데이터를 저장할 수 있는 저장소 역할을 한다.  
+사용자가 처음 사용할 때 session_state는 비어있기 때문에 빈 리스트를 선언해주는 초기화 작업을 해줘야 한다.  
+
+7.4절에서 선언된 함수 send_message는 2가지로 호출된다.  
+첫째는 사용자가 메시지를 입력할 때이다.  
+이 경우는 메시지를 session_state에 저장해야 하므로 send_message 함수를 그대로 호출하면 된다.  
+두번재는 이전 메시지에 대한 기록을 불러와 write()할 때이다.  
+이 경우는 session_state에 저장하면 안되므로 send_message에서 save=False라는 인자를 넘겨주어야 한다.  
+
+<br>
+<br>
+
+##  7.6 Uploading Documents
+
