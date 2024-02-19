@@ -28,6 +28,7 @@ loader.load()
 TextLoader는 txt 파일에서 텍스트를 읽어올 수 있다. 
 
 <br>
+
 ## 
 
 ### PyPDFLoader
@@ -41,6 +42,7 @@ loader.load()
 PyPDFLoader는 pdf 파일에서 텍스트를 읽어올 수 있다.
 
 <br>
+
 ##
 
 ### UnstructuredFileLoader
@@ -80,6 +82,7 @@ chunk_size 옵션만 넣으면 문장이 중간에서 잘릴 수 있기 때문�
 위 두 옵션을 적용할 경우, 문장이 잘리면 앞쪽 Document에서 문장의 일부를 가져와 현재 Document에 추가하여 매끄럽게 해준다.  
 
 <br>
+
 ##
 
 ### CharacterTextSplitter
@@ -269,6 +272,7 @@ Refine Document Chain은 Stuff 코드에서 chain_type="stuff"를 chain_type="re
 
 위 과정은 각각의 답변에 대해 응답을 요청해야 하므로 비용이 비싸질 수 있다. 
 
+<br>
 
 ##
 위의 stuff, refine 방법 외에도 Map-Reduce Method, Map re-rank Method가 있다.  
