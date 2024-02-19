@@ -325,4 +325,327 @@ Streamlit에서 사용자가 데이터를 변경할 때 코드 전체를 재실�
 <br>
 
 ##  7.6 Uploading Documents
+### example_1
+``` python
+import streamlit as st
+import time
 
+st.set_page_config(
+    page_title="DocumentGPT",
+    page_icon="✅"
+)
+
+st.title("DocumentGPT")
+
+st.markdown("""
+    Welcome
+""")
+
+file = st.file_uploader(
+    "upload a .txt .pdf or .docx file",
+    type=["pdf", "txt", "docs"]
+)
+
+if file:
+    st.write(file)
+```
+![image](https://github.com/kh277/test/assets/113894741/46e92953-1d99-4a01-97fa-9c7e9eb6de12)
+
+위의 코드는 파일 업로더를 추가하여 파일을 입력받고, 정보를 출력해주는 기능을 한다.  
+이제 해야 할 일은 6장에서 작성한 코드에 있는 UnstructedFileLoader에게 파일의 위치를 넘겨줘야한다.  
+``` python
+loader = UnstructuredFileLoader("./test.txt")
+```
+
+<br>
+
+##
+
+### example_2
+``` python
+import streamlit as st
+import time
+
+st.set_page_config(
+    page_title="DocumentGPT",
+    page_icon="✅"
+)
+
+st.title("DocumentGPT")
+
+st.markdown("""
+    Welcome
+""")
+
+file = st.file_uploader(
+    "upload a .txt .pdf or .docx file",
+    type=["pdf", "txt", "docs"]
+)
+
+if file:
+    st.write(file)
+    file_content = file.read()
+    file_path = f"./.cache/files/{file.name}"
+    st.write(file_content, file_path)
+    with open(file_path, "wb") as f:
+        f.write(file_content)
+```
+![image](https://github.com/kh277/test/assets/113894741/5b151e83-24aa-48a7-b156-ffdc851857dc)  
+추가된 내용은 다음과 같다.  
+file.read()로 파일에 대한 정보를 읽고, st.write()로 파일의 내용을 화면에 출력한다.  
+그 뒤, 파일을 f.write()를 이용하여 ./.cache/files 위치에 저장한다.  
+
+<br>
+
+##
+### example_3
+``` python
+import streamlit as st
+from langchain.chat_models import ChatOpenAI
+from langchain.document_loaders import UnstructuredFileLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.storage import LocalFileStore
+
+st.set_page_config(
+    page_title="DocumentGPT",
+    page_icon="✅"
+)
+
+st.title("DocumentGPT")
+
+st.markdown("""
+    Welcome
+""")
+
+file = st.file_uploader(
+    "upload a .txt .pdf or .docx file",
+    type=["pdf", "txt", "docs"]
+)
+
+if file:
+    st.write(file)
+    file_content = file.read()
+    file_path = f"./.cache/files/{file.name}"
+    st.write(file_content, file_path)
+    with open(file_path, "wb") as f:
+        f.write(file_content)
+    # 캐시 저장소 위치
+    cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
+
+    # Splitter 선언
+    splitter = CharacterTextSplitter.from_tiktoken_encoder(
+        separator="\n",
+        chunk_size=600,
+        chunk_overlap=100,
+    )
+
+    loader = UnstructuredFileLoader("./.cache/files/chapter_one.txt")
+    docs = loader.load_and_split(text_splitter=splitter)
+    embeddings = OpenAIEmbeddings()
+    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+    vectorstore = FAISS.from_documents(docs, cached_embeddings)
+    retriever = vectorstore.as_retriever()
+
+    docs = retriever.invoke("ministry of truth")
+    st.write(docs)
+``` 
+6장에서 작성한 코드 중 일부를 가져와 합쳤다.  
+그리고 캐시 저장소와 입력받은 파일을 저장하기 위한 위치를 바꾸었다. 
+또한, Jupiter Notebook에서는 .env 파일 내에 API_KEY를 넣으면 자동으로 인식했지만, Streamlit은 그렇지 않다.  
+따라서 .streamlit이라는 폴더를 생성한 후 그 안에 secret.tomld이라는 파일에 API_KEY를 넣었다.  
+<br>
+전체적인 파일 구성은 이렇게 된다.  
+![image](https://github.com/kh277/test/assets/113894741/0038d851-d5de-4bea-88ea-a4014bffd6b9)  
+입력받은 파일은 사진의 .cache/files 내에, 캐시 저장소는 .cache/embedding 내에 저장될 것이다.
+
+![image](https://github.com/kh277/test/assets/113894741/378941e8-249c-4884-945d-3dde7cd8ff97) 
+결과는 다음과 같다.  
+해당 텍스트 파일을 읽어 "harry"라는 내용과 관련이 있는 문서 청크를 반환한다.  
+
+<br>
+
+##
+### example_4
+``` python
+import streamlit as st
+from langchain.chat_models import ChatOpenAI
+from langchain.document_loaders import UnstructuredFileLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.storage import LocalFileStore
+
+
+st.set_page_config(
+    page_title="DocumentGPT",
+    page_icon="✅"
+)
+
+
+def embed_file(file):
+    file_content = file.read()
+    file_path = f"./.cache/files/{file.name}"
+    with open(file_path, "wb") as f:
+        f.write(file_content)
+    # 캐시 저장소 위치
+    cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
+
+    # Splitter 선언
+    splitter = CharacterTextSplitter.from_tiktoken_encoder(
+        separator="\n",
+        chunk_size=600,
+        chunk_overlap=100,
+    )
+    
+    loader = UnstructuredFileLoader(file_path)
+    docs = loader.load_and_split(text_splitter=splitter)
+    embeddings = OpenAIEmbeddings()
+    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+    vectorstore = FAISS.from_documents(docs, cached_embeddings)
+    retriever = vectorstore.as_retriever()
+
+    return retriever
+
+
+st.title("DocumentGPT")
+
+st.markdown("""
+    Welcome
+""")
+
+file = st.file_uploader(
+    "upload a .txt .pdf or .docx file",
+    type=["pdf", "txt", "docs"]
+)
+
+if file:
+    retriever = embed_file(file)
+    s = retriever.invoke("Harry")
+    st.write(s)
+```
+example_3을 함수로 모듈화하여 좀 더 매끄럽게 굴러가도록 했다.  
+그러나 사용자가 챗봇에 입력할 때마다 이 연산을 반복해야 하므로 문제가 발생할 수 있다.  
+
+
+<br><br>
+
+
+## 7.7 - Chat History
+이전 강의에서 연산이 오래걸리는 embed_file 함수를 반복적으로 호출하는 문제점이 있었다.  
+이를 해결하기 위해 embed_file 함수 윗부분에 아래 decorator를 추가해준다.  
+``` python
+@st.cache_data(show_spinner="Embedding file...")
+```
+이 decorator는 Streamlit이 함수를 실행하기 전에 어떤 파일이 있는지부터 확인한다.  
+streamlit은 파일을 해싱한 뒤 동일한 파일인지 체크한다.
+만약 파일이 동일하다면, 그 함수는 실행시지키 않고 기존에 반환한 값을 다시 반환한다.  
+위 코드에 decorator를 추가하여 실행하면 아래 사진과 같게 나온다.  
+![image](https://github.com/kh277/test/assets/113894741/89c06202-e9eb-4560-9a51-c41cb3a5ec9c)
+처음 한번만 저 spinner가 나오고 다음부터는 나오지 않는다.  
+
+<br>
+
+## example_1
+``` python
+import streamlit as st
+from langchain.chat_models import ChatOpenAI
+from langchain.document_loaders import UnstructuredFileLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.storage import LocalFileStore
+
+st.set_page_config(
+    page_title="DocumentGPT",
+    page_icon="✅"
+)
+
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+
+
+@st.cache_data(show_spinner="Embedding file...")
+def embed_file(file):
+    file_content = file.read()
+    file_path = f"./.cache/files/{file.name}"
+    with open(file_path, "wb") as f:
+        f.write(file_content)
+    # 캐시 저장소 위치
+    cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
+
+    # Splitter 선언
+    splitter = CharacterTextSplitter.from_tiktoken_encoder(
+        separator="\n",
+        chunk_size=600,
+        chunk_overlap=100,
+    )
+
+    # 문서 Load
+    loader = UnstructuredFileLoader(file_path)
+
+    # 문서 Embed
+    docs = loader.load_and_split(text_splitter=splitter)
+    embeddings = OpenAIEmbeddings()
+
+    # 문서 Cache
+    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+    
+    # vectorstore에 embedding ㄶ음
+    vectorstore = FAISS.from_documents(docs, cached_embeddings)
+
+    # retriever 생성
+    retriever = vectorstore.as_retriever()
+
+    return retriever
+
+
+def send_message(message, role, save=True):
+    with st.chat_message(role):
+        st.markdown(message)
+    if save:
+        st.session_state["messages"].append({"message": message, "role": role})
+
+
+def paint_history():
+    for message in st.session_state["messages"]:
+        send_message(
+            message["message"],
+            message["role"],
+            save=False
+        )
+
+
+st.title("DocumentGPT")
+
+st.markdown("""
+    Welcome
+""")
+
+with st.sidebar:
+    file = st.file_uploader(
+        "upload a .txt .pdf or .docx file",
+        type=["pdf", "txt", "docs"]
+    )
+
+if file:
+    retriever = embed_file(file)
+    send_message("I'm Ready. Ask away", "ai", save=False)
+    paint_history()
+    message = st.chat_input("Ask anything about your file...")
+    if message:
+        send_message(message, "human")
+        send_message("test", "ai")
+else:
+    st.session_state["messages"] = []
+```
+이전 채팅 기록을 볼 수 있는 기능을 추가되었다.  
+session_state 초기화, 파일 초기화 시 채팅기록 초기화 등 세부 기능도 추가되었다.  
+![image](https://github.com/kh277/test/assets/113894741/3d58e4d0-c7a0-4b45-989d-c3b7d91b832d)
+
+
+<br><br>
+
+
+## 7.8 - Chain
