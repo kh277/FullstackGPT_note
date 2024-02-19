@@ -13,7 +13,7 @@ RAG의 첫 번째 단계 - Retrival(Langchain 모듈)
   5. Retrieve
 
 
-
+<br><br>
 
 ## 6.1강 - Data Loader (Load 과정)
 
@@ -27,6 +27,7 @@ loader.load()
 ```
 TextLoader는 txt 파일에서 텍스트를 읽어올 수 있다. 
 
+<br>
 ## 
 
 ### PyPDFLoader
@@ -39,6 +40,7 @@ loader.load()
 ```
 PyPDFLoader는 pdf 파일에서 텍스트를 읽어올 수 있다.
 
+<br>
 ##
 
 ### UnstructuredFileLoader
@@ -54,6 +56,7 @@ UnstructuredFileLoader는 텍스트 파일, 파워포인트, HTML, PDF, 이미�
 loader.load()를 할 경우 불러온 전체 문서가 Document로 묶여 list에 저장되는데, 이걸 분리할 필요가 있다.  
 
 
+<br><br>
 
 
 ## 6.1강 - Splitter (Transform 과정)
@@ -76,6 +79,7 @@ RecursiveCharacterTextSplitter에서 chunk_size 옵션을 사용하면 청크 �
 chunk_size 옵션만 넣으면 문장이 중간에서 잘릴 수 있기 때문에 chunk_overlap 옵션을 추가해 준다.  
 위 두 옵션을 적용할 경우, 문장이 잘리면 앞쪽 Document에서 문장의 일부를 가져와 현재 Document에 추가하여 매끄럽게 해준다.  
 
+<br>
 ##
 
 ### CharacterTextSplitter
@@ -97,6 +101,7 @@ loader.load_and_split(text_splitter=splitter)
 #### CharacterTextSplitter는 옵션에 separator를 추가할 수 있는데, 이는 python의 split()과 같은 역할을 한다.  
 
 
+<br><br>
 
 
 ## 6.2강 - Tiktoken (Transform 과정)
@@ -123,6 +128,7 @@ default값은 python의 내장 함수인 len()를 사용하도록 되어 있다.
 이것이 Tiktoken 패키지이다.
 
 
+<br><br>
 
 
 ## 6.4강 - Vector (Embed, Store, Retrieve 과정)
@@ -184,6 +190,7 @@ Retrieve 과정은 similarity_search()를 이용하여 캐시 저장소에 저�
 #### 챗봇을 통해 질문한 경우, Retrieve 작업을 통해 질문과 유사한 데이터 청크를 추출하고 prompt와 함께 LLM 모델로 넘겨주어 처리하도록 한다.  
 
 
+<br><br>
 
 
 ## 6.6 RetrievalQA - Stuff
@@ -237,6 +244,7 @@ Stuff Chain의 생성자 함수는 LLM모델, chain 타입, 데이터를 가져�
 따라서 질문과 관련된 prompt만 추출했다고 해도, prompt가 길어질 가능성이 있다.  
 
 
+<br><br>
 
 
 ## 6.6 RetrievalQA - Refine
