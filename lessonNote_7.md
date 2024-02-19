@@ -310,7 +310,7 @@ session_state를 추가한 코드이다.
 <br>
 <br>
 
-## 7.5 Recap
+## 7.5 - Recap
 Streamlit에서 사용자가 데이터를 변경할 때 코드 전체를 재실행한다.  
 이 때, session_state를 제외하고 갱신하기 때문에 session_state는 데이터를 저장할 수 있는 저장소 역할을 한다.  
 사용자가 처음 사용할 때 session_state는 비어있기 때문에 빈 리스트를 선언해주는 초기화 작업을 해줘야 한다.  
@@ -324,7 +324,7 @@ Streamlit에서 사용자가 데이터를 변경할 때 코드 전체를 재실�
 <br>
 <br>
 
-##  7.6 Uploading Documents
+##  7.6 - Uploading Documents
 ### example_1
 ``` python
 import streamlit as st
