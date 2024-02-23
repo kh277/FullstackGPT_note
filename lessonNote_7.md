@@ -764,3 +764,458 @@ if file:
 else:
     st.session_state["messages"] = []
 ```
+
+
+<br><br>
+
+
+## 7.9 - Streaming
+### Callback Handler
+이번에는 LLM에서 응답을 생성할 때, 완성되면 출력하는 것이 아니라 실시간으로 출력하도록 변경해볼 것이다.  
+``` python
+# ...
+
+class ChatCallbackHandler(BaseCallbackHandler):  # --- 추가된 함수
+    message = ""
+    
+    
+    def on_llm_start(self, *args, **kwargs):
+        self.message_box = st.empty()
+
+    def on_llm_end(self, *args, **kwargs):
+        with st.sidebar:
+            st.write("llm ended")
+
+    def on_llm_new_token(self, token, *args, **kwargs):
+        self.message += token
+        self.message_box.markdown(self.message)
+
+
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+
+llm = ChatOpenAI(
+    temperature=0.1,
+    streaming=True,  # -- 추가
+    callbacks=[ChatCallbackHandler()]  # --- 추가
+)
+
+# ...
+
+```
+위의 코드가 추가된 부분이다.  
+1. llm이 시작되면(on_llm_start), empty_box를 message_box 안에 저장한다.  
+2. 그 뒤, 토큰을 생성하여 받으면(on_llm_new_token) message_box에 token을 추가한다.  
+3. 생성을 완료하면(on_llm_end), sidebar에 llm ended라는 문장이 추가된다.
+   
+아래 사진은 그 결과이다.
+
+![image](https://github.com/kh277/test/assets/113894741/fbb670a0-6339-479e-bb99-3f0ec5872835)  
+
+<br>
+
+##
+### fix_1
+위 코드는 응답을 실시간으로 보여주긴 하지만, AI가 말하는 것처럼 보이지 않는다.  
+<br>
+
+``` python
+llm = ChatOpenAI(
+    temperature=0.1,
+    streaming=True,
+    callbacks=[ChatCallbackHandler()]
+```
+위 코드는 llm 선언 부분이고,  
+
+``` python
+if file:
+    retriever = embed_file(file)
+    send_message("I'm Ready. Ask away", "ai", save=False)
+    paint_history()
+    message = st.chat_input("Ask anything about your file...")
+
+    if message:
+        send_message(message, "human")
+
+        chain = (
+            {
+                "context": retriever | RunnableLambda(format_docs),
+                "question": RunnablePassthrough()
+            }
+            | prompt
+            | llm
+        )
+        response = chain.invoke(message)
+        send_message(response.content, "ai")
+else:
+    st.session_state["messages"] = []
+```
+위 코드는 7.8에 있는 코드의 응답 생성 부분이다.  
+7.9에 ChatCallbackHandler의 함수들은 chain.invoke()가 실행될 때에 호출되므로 해당 부분을 바꿔주어야 한다.
+
+<br>
+
+``` python
+if file:
+    retriever = embed_file(file)
+    send_message("I'm Ready. Ask away", "ai", save=False)
+    paint_history()
+    message = st.chat_input("Ask anything about your file...")
+
+    if message:
+        send_message(message, "human")
+
+        chain = (
+            {
+                "context": retriever | RunnableLambda(format_docs),
+                "question": RunnablePassthrough()
+            }
+            | prompt
+            | llm
+        )
+        with st.chat_message("ai"):  # --- 추가
+            response = chain.invoke(message)  # --- 한칸 들여쓰기
+        # send_message(response.content, "ai") --- 삭제
+else:
+    st.session_state["messages"] = []
+```
+response 부분을 with st.chat_message("ai")로 감싸주면,  
+CallbackHandler가 st.empty 함수를 호출할 때(on_llm_start), 토큰을 추가할 때(on_llm_new_token) AI가 한 것처럼 보일 것이다.  
+이대로 작성하게 되면 실시간으로 답변을 생성하여 보여주고, 다 출력되면 send_message()에 의해 답변이 한번 더 출력될 것이다.  
+2번 출력할 필요는 없으므로 send_message(response.content, "ai") 해당 부분은 지워주면 된다.  
+
+<br>
+
+##
+
+send_message()를 삭제하면 cache에 저장할 수 없게 되므로 send_message() 부분을 on_llm_end가 호출될 때 메시지를 저장하도록 변경한다.  
+
+``` python
+class ChatCallbackHandler(BaseCallbackHandler):
+    message = ""
+    
+    def on_llm_start(self, *args, **kwargs):
+        self.message_box = st.empty()
+
+    def on_llm_end(self, *args, **kwargs):
+        save_message(self.message, "ai")  # --- 수정
+
+    def on_llm_new_token(self, token, *args, **kwargs):
+        self.message += token
+        self.message_box.markdown(self.message)
+
+# ...
+
+def save_message(message, role):  # --- 추가된 함수
+    st.session_state["messages"].append({"message": message, "role": role})
+
+def send_message(message, role, save=True):
+    with st.chat_message(role):
+        st.markdown(message)
+    if save:
+        save_message(message, role)  # --- 수정
+```
+
+![image](https://github.com/kh277/test/assets/113894741/636b38eb-2b6b-41ba-b8c6-87ddb6894c0a)
+메시지도 한번만 출력이 되면서 이전 메시지에 대한 기록도 남아있게 된다.  
+
+
+<br><br>
+
+
+## 7.10 - Recap
+``` python
+from typing import Dict, List
+from uuid import UUID
+from langchain.prompts import ChatPromptTemplate
+from langchain.document_loaders import UnstructuredFileLoader
+from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
+from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
+from langchain.storage import LocalFileStore
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import FAISS
+from langchain.chat_models import ChatOpenAI
+from langchain.callbacks.base import BaseCallbackHandler
+import streamlit as st
+
+st.set_page_config(
+    page_title="DocumentGPT",
+    page_icon="✅"
+)
+
+class ChatCallbackHandler(BaseCallbackHandler):
+    message = ""
+    
+    def on_llm_start(self, *args, **kwargs):
+        self.message_box = st.empty()
+
+    def on_llm_end(self, *args, **kwargs):
+        save_message(self.message, "ai")
+
+    def on_llm_new_token(self, token, *args, **kwargs):
+        self.message += token
+        self.message_box.markdown(self.message)
+
+
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+
+llm = ChatOpenAI(
+    temperature=0.1,
+    streaming=True,
+    callbacks=[ChatCallbackHandler()]
+)
+
+@st.cache_data(show_spinner="Embedding file...")
+def embed_file(file):
+    file_content = file.read()
+    file_path = f"./.cache/files/{file.name}"
+    with open(file_path, "wb") as f:
+        f.write(file_content)
+    # 캐시 저장소 위치
+    cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
+
+    # Splitter 선언
+    splitter = CharacterTextSplitter.from_tiktoken_encoder(
+        separator="\n",
+        chunk_size=600,
+        chunk_overlap=100,
+    )
+
+    # 문서 Load
+    loader = UnstructuredFileLoader(file_path)
+
+    # 문서 Embed
+    docs = loader.load_and_split(text_splitter=splitter)
+    embeddings = OpenAIEmbeddings()
+
+    # 문서 Cache
+    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+    
+    # vectorstore에 embedding 넣음
+    vectorstore = FAISS.from_documents(docs, cached_embeddings)
+
+    # retriever 생성
+    retriever = vectorstore.as_retriever()
+
+    return retriever
+
+
+def save_message(message, role):
+    st.session_state["messages"].append({"message": message, "role": role})
+
+def send_message(message, role, save=True):
+    with st.chat_message(role):
+        st.markdown(message)
+    if save:
+        save_message(message, role)
+
+
+def paint_history():
+    for message in st.session_state["messages"]:
+        send_message(
+            message["message"],
+            message["role"],
+            save=False
+        )
+
+
+def format_docs(docs):
+    return "\n\n".join(document.page_content for document in docs)
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", """Answer the question using only the following context. If you don't know the answer
+     just say you don't know. DON'T make anything up.
+     Context: {context}"""),
+    ("human", "{question}")
+])
+
+st.title("DocumentGPT")
+
+st.markdown("""
+    Welcome
+""")
+
+with st.sidebar:
+    file = st.file_uploader(
+        "upload a .txt .pdf or .docx file",
+        type=["pdf", "txt", "docs"]
+    )
+
+if file:
+    retriever = embed_file(file)
+    send_message("I'm Ready. Ask away", "ai", save=False)
+    paint_history()
+    message = st.chat_input("Ask anything about your file...")
+
+    if message:
+        send_message(message, "human")
+
+        chain = (
+            {
+                "context": retriever | RunnableLambda(format_docs),
+                "question": RunnablePassthrough()
+            }
+            | prompt
+            | llm
+        )
+        with st.chat_message("ai"):
+            response = chain.invoke(message)
+else:
+    st.session_state["messages"] = []
+```
+전체 코드이다.  
+한 줄씩 찬찬히 살펴보면,  
+
+``` python
+# 1. 기본 설정
+
+# 1-1. 제목 설정
+st.title("DocumentGPT")
+
+# 1-2. 제목 밑의 문구 설정
+st.markdown("""
+    Welcome
+""")
+
+# 1-3. 사이드바 설정 - 사용자에게 파일 요청
+with st.sidebar:
+    file = st.file_uploader(
+        "upload a .txt .pdf or .docx file",
+        type=["pdf", "txt", "docs"]
+    )
+
+# 2. 파일이 존재한다면(사용자가 파일을 업로드했다면),
+if file:
+    # 2-1. 파일을 embed해서 retriever 반환
+    retriever = embed_file(file)
+
+    # 2-2. 준비가 완료됐다는 메시지 전송
+    send_message("I'm Ready. Ask away", "ai", save=False)
+
+    # 2-3. 이전 메시지에 대한 기록 출력
+    paint_history()
+
+    # 2-4. chat input 생성
+    message = st.chat_input("Ask anything about your file...")
+
+    # 2-5. 만약 메시지를 보낸다면,
+    if message:
+        # 메시지를 human으로 출력
+        send_message(message, "human")
+
+        # langchain 실행
+        chain = (
+            {
+                # retriever가 document의 리스트를 제공하면 format_docs() 함수를 거쳐 하나의 string으로 통합
+                "context": retriever | RunnableLambda(format_docs),
+
+                # 사용자가 질문하면 수정하지 않고 즉시 prompt로 전송
+                "question": RunnablePassthrough()
+            }
+            | prompt
+            | llm
+        )
+
+        # ai 응답 생성
+        with st.chat_message("ai"):
+            chain.invoke(message)
+# 2-0. 파일이 존재하지 않는다면,
+else:
+    # session_state에 저장된 메시지 초기화
+    st.session_state["messages"] = []
+```
+
+<br>
+
+2-1 과정의 embed_data() 함수
+``` python
+# 0. 데코레이터 - 동일한 파일에 대해 함수 재실행 방지
+@st.cache_data(show_spinner="Embedding file...")
+def embed_file(file):
+    # 1. 파일을 읽음
+    file_content = file.read()
+    
+    # 2. 파일을 복사하여 해당 위치에 저장함
+    file_path = f"./.cache/files/{file.name}"
+    with open(file_path, "wb") as f:
+        f.write(file_content)
+
+    # 3. splitter, loader 생성
+    splitter = CharacterTextSplitter.from_tiktoken_encoder(
+        separator="\n",
+        chunk_size=600,
+        chunk_overlap=100,
+    )
+
+    loader = UnstructuredFileLoader(file_path)
+
+    # 4. document split 과정
+    docs = loader.load_and_split(text_splitter=splitter)
+
+    # 5. cache에서 임베딩 가져오기
+    cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
+    embeddings = OpenAIEmbeddings()
+    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+    
+    # 6. document와 임베딩으로부터 vectorstore 획득
+    vectorstore = FAISS.from_documents(docs, cached_embeddings)
+
+    # 7. vectorstore를 retriever로 변경
+    retriever = vectorstore.as_retriever()
+
+    return retriever
+```
+
+<br>
+
+2-2 과정의 send_message() 함수
+``` python
+def send_message(message, role, save=True):
+    with st.chat_message(role):
+        # message 출력
+        st.markdown(message)
+    if save:
+        # save 옵션이 켜져있다면, 메시지 저장
+        save_message(message, role)
+
+def save_message(message, role):
+    # 메시지 딕셔너리를 저장하여 누가 보냈는지와 메시지의 내용 저장
+    st.session_state["messages"].append({"message": message, "role": role})
+```
+
+<br>
+
+2-3 과정의 paint_history() 함수
+``` python
+def paint_history():
+    # session_state에 존재하는 모든 메시지에 대해
+    for message in st.session_state["messages"]:
+        # send_message 함수를 통해 출력
+        send_message(
+            message["message"],
+            message["role"],
+            save=False
+        )
+```
+
+<br>
+
+``` python
+# BaseCallbackHandler는 llm에서 어떤 일이 발생하면 모든 method와 class 호출
+class ChatCallbackHandler(BaseCallbackHandler):
+    message = ""
+
+    # 신경쓸 사항 1 (llm 시작) - 화면에 empty_box 생성
+    def on_llm_start(self, *args, **kwargs):
+        self.message_box = st.empty()
+
+    # 신경쓸 사항 2 (llm 종료) - 메시지를 session_state에 저장
+    def on_llm_end(self, *args, **kwargs):
+        save_message(self.message, "ai")
+
+    # 신경쓸 사항 3 (llm에서 새로운 token 추가) - empty_box 업데이트
+    def on_llm_new_token(self, token, *args, **kwargs):
+        self.message += token
+        self.message_box.markdown(self.message)
+```
