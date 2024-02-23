@@ -924,6 +924,8 @@ def send_message(message, role, save=True):
 
 
 ## 7.10 - Recap
+![image](https://github.com/kh277/test/assets/113894741/5e47f196-0007-42d5-8613-ccb19cd5119e)  
+
 ``` python
 from typing import Dict, List
 from uuid import UUID
@@ -1060,11 +1062,11 @@ if file:
             | llm
         )
         with st.chat_message("ai"):
-            response = chain.invoke(message)
+            chain.invoke(message)
 else:
     st.session_state["messages"] = []
 ```
-전체 코드이다.  
+파일 구성과 전체 코드이다.  
 한 줄씩 찬찬히 살펴보면,  
 
 ``` python
